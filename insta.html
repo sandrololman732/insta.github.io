@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram-like Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fafafa;
+        }
+
+        header {
+            background-color: #ffffff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #logo {
+            max-width: 100px;
+            height: auto;
+        }
+
+        #photo-container {
+            position: relative;
+            text-align: center;
+            overflow: hidden; /* Added to contain comments within the photo container */
+        }
+
+        #photo {
+            width: 320px;
+            height: 500px;
+            object-fit: cover;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+
+        #profile-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        #profile-container:hover {
+            opacity: 1;
+        }
+
+        #profile-picture {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        #username {
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        #username:hover {
+            transform: scale(1.1);
+        }
+
+        .interaction-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .heart {
+            font-size: 30px;
+            cursor: pointer;
+            color: #888;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .heart.active {
+            color: red;
+        }
+
+        .heart:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .counter {
+            font-size: 16px;
+            margin-top: 5px; /* Added margin-top */
+            display: none; /* Hidden by default */
+        }
+
+        #description {
+            font-size: 16px;
+            margin-bottom: 10px; /* Added margin-bottom */
+        }
+
+        .text-area.comment {
+            width: 200px;
+            padding: 5px;
+            resize: none;
+            overflow: auto;
+            border: 1px solid #ccc;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .text-area.comment:hover {
+            background-color: #f0f0f0;
+        }
+
+        .text-area.comment.clicked {
+            background-color: white;
+            animation: clickAnimation 0.3s ease;
+        }
+
+        .comments-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 0 0 10px 0;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .comment-item {
+            margin-bottom: 5px;
+            font-size: 14px; /* Larger font size */
+            display: flex;
+            align-items: center;
+        }
+
+        .comment-item:hover {
+            cursor: pointer;
+        }
+
+        .comment-name {
+            color: #3366cc; /* Different color, you can adjust this value */
+            margin-right: 5px;
+        }
+
+        .pop-up {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            animation: popUpAnimation 1s ease;
+        }
+
+        @keyframes clickAnimation {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes popUpAnimation {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <img id="logo" src="https://i.imgur.com/OH7Yxoy.png" alt="Logo">
+    </header>
+
+    <div id="photo-container" class="photo-details">
+        <div id="profile-container">
+            <img id="profile-picture"
+                src="file:///C:/Users/WGS/Downloads/WhatsApp%20Bild%202024-02-29%20um%2011.24.58_610a1033.jpg"
+                alt="Profile Picture">
+            <p id="username" onclick="goToProfilePage()">sandrololman</p>
+        </div>
+        <div class="comments-container" id="commentsContainer"></div>
+        <img id="photo"
+            src="file:///C:/Users/WGS/Downloads/WhatsApp%20Bild%202024-02-29%20um%2011.24.58_610a1033.jpg"
+            alt="Photo">
+        <p id="description">Spontan Reutlingen</p> <!-- Moved description above like button -->
+        <div class="interaction-buttons">
+            <div class="heart" onclick="toggleLike()">&#10084;</div>
+            <div class="counter" id="likeCounter">0 likes</div>
+        </div>
+        <div class="text-area comment" id="commentBox" contenteditable="true"
+            oninput="updateCommentCount()" onclick="clearCommentBox(event)"
+            onkeypress="handleKeyPress(event)">
+            Click here to add a comment...
+        </div>
+        <div class="pop-up" id="popUp">Sent!</div>
+    </div>
+
+    <script>
+        let liked = false;
+        let likeCount = 0;
+
+        function toggleLike() {
+            liked = !liked;
+            likeCount = liked ? likeCount + 1 : likeCount - 1;
+            document.getElementById('likeCounter').innerText = likeCount + ' likes';
+            document.querySelector('.counter').style.display = 'block'; // Display the like count
+            document.querySelector('.counter').textContent = likeCount === 1 ? '1 like' : likeCount + ' likes';
+            document.querySelector('.heart').classList.toggle('active', liked);
+        }
+
+        function updateCommentCount() {
+            // You can perform any necessary actions when the comment is updated.
+        }
+
+        function clearCommentBox(event) {
+            const commentBox = document.getElementById('commentBox');
+            commentBox.classList.add('clicked');
+            if (commentBox.innerText.trim() === 'Click here to add a comment...') {
+                commentBox.innerText = '';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendComment();
+            }
+        }
+
+        function sendComment() {
+            const commentBox = document.getElementById('commentBox');
+            const popUp = document.getElementById('popUp');
+            const commentsContainer = document.getElementById('commentsContainer');
+            const newComment = document.createElement('div');
+            newComment.classList.add('comment-item');
+            const randomColor = getRandomColor();
+            newComment.innerHTML = `<span class="comment-name" style="color:${randomColor}">user${Math.floor(Math.random() * 100)}</span>: ${commentBox.innerText}`;
+            commentsContainer.appendChild(newComment);
+
+            commentBox.innerText = '';
+            commentBox.classList.remove('clicked');
+            popUp.style.display = 'block';
+            setTimeout(() => {
+                popUp.style.display = 'none';
+            }, 2000); // Hide pop-up after 2 seconds
+        }
+
+        function goToProfilePage() {
+            // Implement the logic to navigate to the user's profile page
+            alert("Redirecting to user's profile page");
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+	<script>
+    // ... (other functions)
+
+    function goToProfilePage() {
+        // Redirecting to www.youtube.com when the username is clicked
+        window.location.href = "https://www.instagram.com/s.2xv.a/";
+    }
+
+    // ... (other functions)
+</script>
+</body>
+
+</html>
